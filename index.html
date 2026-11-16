@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Luna 🌛</title>
+<style>
+:root{
+  --bg:#0b0d12; --panel:#12151c; --panel2:#181c26; --line:#232837;
+  --text:#e8ebf3; --muted:#8a93a8; --accent:#7c8cff; --accent2:#4de2c5; --danger:#ff6b81;
+  --radius:16px;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:radial-gradient(1200px 600px at 80% -10%,#1a2040 0%,transparent 60%),var(--bg);
+  color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--line);
+  background:rgba(11,13,18,.7);backdrop-filter:blur(10px)}
+.logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+h1{font-size:16px;font-weight:600;letter-spacing:.2px}
+.chip{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:3px 10px;border-radius:99px;background:var(--panel)}
+.chip b{color:var(--accent2);font-weight:600}
+.spacer{flex:1}
+.tabs{display:flex;gap:4px;background:var(--panel);padding:4px;border-radius:12px;border:1px solid var(--line)}
+.tab{border:0;background:none;color:var(--muted);padding:7px 16px;border-radius:9px;cursor:pointer;font:inherit;font-size:14px}
+.tab.active{background:var(--panel2);color:var(--text)}
+main{flex:1;min-height:0;display:flex;gap:18px;padding:18px 22px}
+.col{display:flex;flex-direction:column;min-height:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+#left{width:min(46%,560px);gap:14px}
+#right{flex:1;min-width:0}
+.view{position:relative;aspect-ratio:4/3;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#07080c}
+.view video,.view img{width:100%;height:100%;object-fit:contain;display:none}
+.view .ph{color:var(--muted);text-align:center;padding:20px;font-size:14px}
+.view.has .ph{display:none}
+.drop{outline:2px dashed var(--accent);outline-offset:-10px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pad{padding:14px}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--text);
+  padding:9px 16px;border-radius:11px;transition:.15s}
+button:hover{border-color:var(--accent)}
+button.primary{background:linear-gradient(135deg,var(--accent),#5b6cf0);border-color:transparent;font-weight:600}
+button.stop{background:var(--danger);border-color:transparent;color:#fff;font-weight:600}
+button:disabled{opacity:.5;cursor:not-allowed}
+select,input[type=text],textarea{font:inherit;background:var(--panel2);color:var(--text);border:1px solid var(--line);
+  border-radius:11px;padding:9px 12px;outline:none}
+select:focus,input:focus,textarea:focus{border-color:var(--accent)}
+label{font-size:12px;color:var(--muted)}
+#chat{flex:1;min-height:0;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:88%;padding:10px 14px;border-radius:14px;white-space:pre-wrap;word-wrap:break-word}
+.msg.user{align-self:flex-end;background:linear-gradient(135deg,var(--accent),#5b6cf0);border-bottom-right-radius:4px}
+.msg.bot{align-self:flex-start;background:var(--panel2);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg.err{border-color:var(--danger);color:var(--danger)}
+.msg img{max-width:220px;border-radius:10px;display:block;margin-bottom:8px}
+.stat{font-size:11.5px;color:var(--muted);margin-top:6px}
+.cursor::after{content:"▍";color:var(--accent2);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.empty{margin:auto;color:var(--muted);text-align:center;max-width:320px}
+#composer{display:flex;gap:10px;padding:14px;border-top:1px solid var(--line)}
+#composer textarea{flex:1;resize:none;height:44px;max-height:140px}
+#live{display:none;flex:1;min-height:0;overflow:auto;padding:18px;flex-direction:column;gap:10px}
+.cap{padding:10px 14px;border-radius:12px;background:var(--panel2);border:1px solid var(--line)}
+.cap small{color:var(--muted);display:block;font-size:11.5px}
+.cap:first-child{border-color:var(--accent2);font-size:17px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block;margin-right:6px}
+.dot.on{background:var(--accent2);box-shadow:0 0 10px var(--accent2)}
+@media(max-width:860px){main{flex-direction:column;overflow:auto}#left{width:100%}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"></div>
+  <h1>Luna 🌛</h1>
+  <span class="chip" id="chipModel">modèle : <b>…</b></span>
+  <span class="chip" id="chipDev">appareil : <b>…</b></span>
+  <div class="spacer"></div>
+  <span class="chip" id="chipStats">— tok/s</span>
+  <div class="tabs">
+    <button class="tab active" data-mode="chat">Chat</button>
+    <button class="tab" data-mode="live">Live caméra</button>
+  </div>
+</header>
+
+<main>
+  <section class="col" id="left">
+    <div class="card view" id="view">
+      <div class="ph" id="ph">Glisse une image ici, ou utilise les boutons ci-dessous</div>
+      <img id="preview" alt="">
+      <video id="video" autoplay muted playsinline></video>
+    </div>
+    <div class="card pad">
+      <div class="row">
+        <button id="btnFile">Choisir une image</button>
+        <button id="btnCam">Caméra</button>
+        <button id="btnClear">Retirer</button>
+        <input type="file" id="file" accept="image/*" hidden>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <div><label>Taille image</label><br>
+          <select id="imgSize"><option>256</option><option>384</option><option selected>512</option><option>768</option></select></div>
+        <div><label>Tokens max</label><br>
+          <select id="maxTok"><option>64</option><option selected>160</option><option>320</option><option>512</option></select></div>
+        <div style="flex:1;min-width:140px"><label>Prompt du mode live</label><br>
+          <input type="text" id="livePrompt" style="width:100%" value="Décrivez ce que vous voyez en une phrase."></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="col card" id="right">
+    <div id="chat"><div class="empty" id="empty">Ajoute une image (facultatif) et pose ta question. La réponse s'affiche en direct.</div></div>
+    <div id="live"></div>
+    <div id="composer">
+      <textarea id="prompt" placeholder="Pose une question sur l'image…" rows="1"></textarea>
+      <button class="primary" id="btnSend">Envoyer</button>
+    </div>
+    <div id="liveBar" class="pad row" style="display:none;border-top:1px solid var(--line)">
+      <button class="primary" id="btnLive">Démarrer le live</button>
+      <span><span class="dot" id="liveDot"></span><span id="liveStatus" style="color:var(--muted)">Arrêté</span></span>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let imageData = null;      // dataURL de l'image active (fichier)
+let camStream = null;
+let abortCtl = null;       // AbortController de la génération en cours
+let liveOn = false;
+let mode = 'chat';
+
+// ---------- Infos serveur ----------
+fetch('/api/info').then(r => r.json()).then(i => {
+  $('chipModel').querySelector('b').textContent = i.model;
+  $('chipDev').querySelector('b').textContent = i.device + ' · ' + i.dtype;
+}).catch(() => {});
+
+// ---------- Image / caméra ----------
+function setView(kind) {
+  $('view').classList.toggle('has', kind !== null);
+  $('preview').style.display = kind === 'img' ? 'block' : 'none';
+  $('video').style.display = kind === 'cam' ? 'block' : 'none';
+}
+function loadFile(f) {
+  if (!f || !f.type.startsWith('image/')) return;
+  stopCam();
+  const rd = new FileReader();
+  rd.onload = () => { imageData = rd.result; $('preview').src = imageData; setView('img'); };
+  rd.readAsDataURL(f);
+}
+$('btnFile').onclick = () => $('file').click();
+$('file').onchange = (e) => loadFile(e.target.files[0]);
+$('btnClear').onclick = () => { imageData = null; stopCam(); $('preview').removeAttribute('src'); setView(null); };
+['dragover', 'dragenter'].forEach(ev => $('view').addEventListener(ev, e => { e.preventDefault(); $('view').classList.add('drop'); }));
+['dragleave', 'drop'].forEach(ev => $('view').addEventListener(ev, e => { e.preventDefault(); $('view').classList.remove('drop'); }));
+$('view').addEventListener('drop', e => loadFile(e.dataTransfer.files[0]));
+window.addEventListener('paste', e => {
+  const it = [...(e.clipboardData?.items || [])].find(i => i.type.startsWith('image/'));
+  if (it) loadFile(it.getAsFile());
+});
+
+async function startCam() {
+  if (camStream) return true;
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+    $('video').srcObject = camStream;
+    await $('video').play();
+    imageData = null;
+    setView('cam');
+    return true;
+  } catch (e) {
+    alert('Caméra inaccessible : ' + e.message);
+    return false;
+  }
+}
+function stopCam() {
+  if (liveOn) stopLive();
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+  $('video').srcObject = null;
+  if (!imageData) setView(null); else setView('img');
+}
+$('btnCam').onclick = () => camStream ? stopCam() : startCam();
+
+function grabFrame(size) {
+  const v = $('video');
+  const c = document.createElement('canvas');
+  const s = Math.min(1, size / Math.max(v.videoWidth, v.videoHeight));
+  c.width = Math.round(v.videoWidth * s); c.height = Math.round(v.videoHeight * s);
+  c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', 0.85);
+}
+
+// ---------- Streaming SSE ----------
+async function streamGenerate(payload, onToken, signal) {
+  const res = await fetch('/api/generate', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload), signal
+  });
+  if (!res.ok || !res.body) throw new Error('Erreur serveur ' + res.status);
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '', stats = null;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let idx;
+    while ((idx = buf.indexOf('\n\n')) >= 0) {
+      const line = buf.slice(0, idx).trim(); buf = buf.slice(idx + 2);
+      if (!line.startsWith('data:')) continue;
+      const ev = JSON.parse(line.slice(5));
+      if (ev.error) throw new Error(ev.error);
+      if (ev.t) onToken(ev.t);
+      if (ev.done) stats = ev.stats;
+    }
+  }
+  return stats;
+}
+function showStats(s) { if (s) $('chipStats').textContent = s.tps + ' tok/s · 1er token ' + s.ttft + ' s'; }
+function statLine(s) { return s.new_tokens + ' tokens · ' + s.tps + ' tok/s · ' + s.total + ' s'; }
+
+// ---------- Chat ----------
+function addMsg(cls, text, img) {
+  $('empty')?.remove();
+  const d = document.createElement('div');
+  d.className = 'msg ' + cls;
+  if (img) { const i = document.createElement('img'); i.src = img; d.appendChild(i); }
+  const t = document.createElement('span'); t.textContent = text; d.appendChild(t);
+  $('chat').appendChild(d);
+  $('chat').scrollTop = $('chat').scrollHeight;
+  return { box: d, text: t };
+}
+function setBusy(b) {
+  const sendBtn = $('btnSend');
+  sendBtn.textContent = b ? 'Stop' : 'Envoyer';
+  sendBtn.classList.toggle('stop', b);
+  sendBtn.classList.toggle('primary', !b);
+}
+async function send() {
+  if (abortCtl) { abortCtl.abort(); return; }   // le bouton sert de Stop
+  const prompt = $('prompt').value.trim();
+  if (!prompt) return;
+  let img = imageData;
+  if (!img && camStream) img = grabFrame(+$('imgSize').value);
+  $('prompt').value = ''; $('prompt').style.height = '44px';
+  addMsg('user', prompt, img);
+  const bot = addMsg('bot', '', null);
+  bot.text.classList.add('cursor');
+  abortCtl = new AbortController(); setBusy(true);
+  try {
+    const stats = await streamGenerate(
+      { prompt, image: img, image_size: +$('imgSize').value, max_new_tokens: +$('maxTok').value },
+      (tk) => { bot.text.textContent += tk; $('chat').scrollTop = $('chat').scrollHeight; },
+      abortCtl.signal);
+    if (stats) {
+      showStats(stats);
+      const s = document.createElement('div'); s.className = 'stat'; s.textContent = statLine(stats);
+      bot.box.appendChild(s);
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError') { bot.box.classList.add('err'); bot.text.textContent += '\n' + e.message; }
+  } finally {
+    bot.text.classList.remove('cursor'); abortCtl = null; setBusy(false);
+  }
+}
+$('btnSend').onclick = send;
+$('prompt').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+$('prompt').addEventListener('input', e => { e.target.style.height = '44px'; e.target.style.height = Math.min(140, e.target.scrollHeight) + 'px'; });
+
+// ---------- Live ----------
+function addCaption(text, stats) {
+  const d = document.createElement('div'); d.className = 'cap';
+  const small = document.createElement('small');
+  small.textContent = new Date().toLocaleTimeString() + (stats ? ' · ' + stats.tps + ' tok/s' : '');
+  const p = document.createElement('div'); p.textContent = text;
+  d.appendChild(small); d.appendChild(p);
+  $('live').prepend(d);
+  while ($('live').children.length > 12) $('live').lastChild.remove();
+}
+async function liveLoop() {
+  while (liveOn) {
+    let txt = '';
+    abortCtl = new AbortController();
+    try {
+      const frame = grabFrame(+$('imgSize').value);
+      const stats = await streamGenerate(
+        { prompt: $('livePrompt').value, image: frame, image_size: +$('imgSize').value, max_new_tokens: 80 },
+        (tk) => { txt += tk; }, abortCtl.signal);
+      if (txt.trim()) addCaption(txt.trim(), stats);
+      showStats(stats);
+    } catch (e) {
+      if (e.name === 'AbortError') break;
+      $('liveStatus').textContent = 'Erreur : ' + e.message;
+      await new Promise(r => setTimeout(r, 1500));
+    }
+  }
+  abortCtl = null;
+}
+async function startLive() {
+  if (!(await startCam())) return;
+  liveOn = true;
+  $('btnLive').textContent = 'Arrêter le live'; $('btnLive').classList.replace('primary', 'stop');
+  $('liveDot').classList.add('on'); $('liveStatus').textContent = 'En cours…';
+  liveLoop();
+}
+function stopLive() {
+  liveOn = false;
+  if (abortCtl) abortCtl.abort();
+  $('btnLive').textContent = 'Démarrer le live'; $('btnLive').classList.replace('stop', 'primary');
+  $('liveDot').classList.remove('on'); $('liveStatus').textContent = 'Arrêté';
+}
+$('btnLive').onclick = () => liveOn ? stopLive() : startLive();
+
+// ---------- Onglets ----------
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
+  mode = b.dataset.mode;
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === b));
+  const live = mode === 'live';
+  $('chat').style.display = live ? 'none' : 'flex';
+  $('composer').style.display = live ? 'none' : 'flex';
+  $('live').style.display = live ? 'flex' : 'none';
+  $('liveBar').style.display = live ? 'flex' : 'none';
+  if (!live && liveOn) stopLive();
+});
+</script>
+</body>
+</html>
